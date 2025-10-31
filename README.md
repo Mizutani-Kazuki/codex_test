@@ -15,6 +15,9 @@ npm run start
 ```
 
 Expo CLI が立ち上がるので、任意のプラットフォーム（iOS/Android シミュレータ、Expo Go アプリ、Web）で確認してください。
+開発環境によってはファイル監視の上限に達し、`EMFILE: too many open files, watch` エラーが表示される場合があります。
+`npm run start` は macOS や Linux では Expo を起動する前に `ulimit -n 8192` を実行して監視上限を引き上げるようになりました。
+もし自動での引き上げに失敗した場合は、手動で `ulimit -n 8192` を実行してからコマンドを再実行するか、[Watchman](https://facebook.github.io/watchman/docs/install) をインストールしてください。
 
 ## プロジェクト構成
 
