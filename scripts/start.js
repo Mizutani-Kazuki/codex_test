@@ -1,9 +1,41 @@
 #!/usr/bin/env node
 const { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 const args = process.argv.slice(2);
 const expoArgs = ['expo', 'start', ...args];
 const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+
+function patchDebuggingOverlaySpec() {
+  const specPath = path.join(
+    __dirname,
+    '..',
+    'node_modules',
+    'react-native',
+    'src',
+    'private',
+    'specs',
+    'components',
+    'DebuggingOverlayNativeComponent.js'
+  );
+
+  try {
+    const original = fs.readFileSync(specPath, 'utf8');
+    if (original.includes('$ReadOnlyArray<TraceUpdate>') || original.includes('$ReadOnlyArray<ElementRectangle>')) {
+      const patched = original
+        .replace('$ReadOnlyArray<TraceUpdate>', 'ReadonlyArray<TraceUpdate>')
+        .replace('$ReadOnlyArray<ElementRectangle>', 'ReadonlyArray<ElementRectangle>');
+
+      if (patched !== original) {
+        fs.writeFileSync(specPath, patched);
+        console.log('Patched DebuggingOverlayNativeComponent.js to support ReadonlyArray.');
+      }
+    }
+  } catch (error) {
+    console.warn('Unable to patch DebuggingOverlayNativeComponent.js automatically:', error.message);
+  }
+}
 
 function runExpoDirectly() {
   const expo = spawn(npxCmd, expoArgs, {
@@ -24,6 +56,8 @@ function runExpoDirectly() {
     process.exit(1);
   });
 }
+
+patchDebuggingOverlaySpec();
 
 if (process.platform === 'win32') {
   runExpoDirectly();
